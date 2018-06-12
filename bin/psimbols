@@ -24,7 +24,7 @@ try:
     logging.info('Starting a server on port ' + str(args.port))
     server = http.server.HTTPServer(('', args.port), psimbols.http.Handler)
 
-    logging.info('Entering the serve loop')
+    logging.info('Entering the server loop')
     server.serve_forever()
     
 except KeyboardInterrupt:

@@ -1,9 +1,17 @@
 
 import http.server
+import json
+
+import psimbols.message
+
+MIN_LENGTH = 12
+MAX_LENGTH = 1024
+
+message_processor = psimbols.message.Processor()
 
 class Handler(http.server.BaseHTTPRequestHandler):
 
-    server_version = '1.0'
+    server_version = 'Psimbols/1.0'
     sys_version = ''
     
     def do_GET(self):
@@ -13,5 +21,35 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(b'Hello\n')
         
     def do_POST(self):
-        self.send_error(401)    # unauthorised
+        content_length = self.headers['Content-Length']
+        length = int(content_length) if content_length else 0
+        
+        if length < MIN_LENGTH or length > MAX_LENGTH:
+            self.send_error(400)
+            return
+            
+        posted_bytes = self.rfile.read(length)
+        
+        if len(posted_bytes) != length:
+            self.send_error(400)
+            return
+        
+        posted_string = posted_bytes.decode('utf-8')
+        try:
+            message = json.loads(posted_string)
+            
+        except json.JSONDecodeError:
+            self.send_error(400)
+            return
+
+        try:
+            response = message_processor.process(message)
+                 
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')  
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            
+        except psimbols.message.ClientUnauthorised:
+            self.send_error(401)
 
