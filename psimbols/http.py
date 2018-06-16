@@ -24,14 +24,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
         content_length = self.headers['Content-Length']
         length = int(content_length) if content_length else 0
         
-        if length < MIN_LENGTH or length > MAX_LENGTH:
-            self.send_error(400)
+        if length < MIN_LENGTH:
+            self.send_error(400, "Content-Length is too small")
+            return
+
+        if length > MAX_LENGTH:
+            self.send_error(400, "Content-Length is too big")
             return
             
         posted_bytes = self.rfile.read(length)
         
         if len(posted_bytes) != length:
-            self.send_error(400)
+            self.send_error(400, "Data is shorter than Content-Length")
             return
         
         posted_string = posted_bytes.decode('utf-8')
@@ -39,7 +43,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             message = json.loads(posted_string)
             
         except json.JSONDecodeError:
-            self.send_error(400)
+            self.send_error(400, "Data is not in JSON format")
             return
 
         try:
