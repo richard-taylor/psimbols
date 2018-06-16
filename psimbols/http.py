@@ -54,7 +54,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')  
             self.end_headers()
             self.wfile.write(json.dumps(response).encode('utf-8'))
-            
+
+        except psimbols.err.BadMessageFormat:
+            self.send_error(400, "Message format is not correct")
+
         except psimbols.err.ClientUnauthorised:
-            self.send_error(401)
+            self.send_error(401, "Client is not authorised")
+
+        except:
+            self.send_error(500, "Uncaught exception")
 
