@@ -1,10 +1,9 @@
 
-class ClientUnauthorised(Exception):
-    pass
+import psimbols.err
     
 class Processor:
 
     def process(self, message):
         if 'client' in message:
             return message
-        raise ClientUnauthorised()
+        raise psimbols.err.ClientUnauthorised()

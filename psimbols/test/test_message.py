@@ -1,4 +1,5 @@
 
+import psimbols.err
 import psimbols.message
 import unittest
 
@@ -15,7 +16,7 @@ class TestMessage(unittest.TestCase):
         
     def test_unauthorised(self):
         im = {'baddie': '0987654321'}
-        self.assertRaises(psimbols.message.ClientUnauthorised,
+        self.assertRaises(psimbols.err.ClientUnauthorised,
                           self.processor.process, im)
                           
 if __name__ == '__main__':

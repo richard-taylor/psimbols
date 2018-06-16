@@ -2,6 +2,7 @@
 import http.server
 import json
 
+import psimbols.err
 import psimbols.message
 
 MIN_LENGTH = 12
@@ -54,6 +55,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(response).encode('utf-8'))
             
-        except psimbols.message.ClientUnauthorised:
+        except psimbols.err.ClientUnauthorised:
             self.send_error(401)
 
