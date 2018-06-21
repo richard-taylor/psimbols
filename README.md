@@ -46,8 +46,9 @@ whatever the public key is (an open service). Or it can reject requests
 that are not from pre-registered public keys (a closed service).
 
 I am not going to make key registration part of this project. There are
-lots of ways to do that. And I will probably hand install the keys from
-my test clients into my test servers.
+lots of ways to do that. I will probably hand install the keys from my
+test clients into my test servers and use only "closed services" because
+that enables mitigation against man-in-the-middle attacks as explained below.
 
 If the server decides the public key is acceptable, then it sends back
 a message:
@@ -66,13 +67,17 @@ When the client decrypts the response with its private key, it becomes
 a channel challenge message:
 ```json
 {
+  "account_secret": "what i told you when you registed",
   "channel_types": ["AES", "DES"],
   "challenge_question": "something to do"
 }
 ```
 
-This challenge message has two purposes. Firstly it tells the client which
-symmetric cipher algorithms are supported. And secondly it provides a test
+This challenge message has three purposes. Firstly it tells the client that
+this is the real server that it registered with, and not a man in the middle,
+if the "account_secret" matches what is configured. Secondly it tells the
+client which
+symmetric cipher algorithms are supported. And finally it provides a test
 that can only be passed by the legitimate owner of the public key. Since
 anyone can know the public key we don't want bad actors to be able to
 disrupt existing channels by creating new channels.
@@ -186,24 +191,5 @@ If the client loses the channel data (because it has no persistence and
 gets restarted, say) then it can simply request a new channel.
 
 Obviously there will be limits on channel expiry. Because very frequent
-expiry suggests that something bad is happening.
-
-## man in the middle attacks
-
-Without a trusted third party there is a risk that a bad actor could
-insert themselves between a client and server. Pretending to be one to
-the other it could read all the messages on the channels created.
-
-This can only happen if *all* the communications between client and server
-are intercepted by the man in the middle. So, in the same way that I am
-not going to investigate public key distribution yet, I will also say that
-man-in-the-middle attacks can be defeated by having additional communication
-paths over which the owner of a client can check that their requests are
-being processed by the server and not someone else.
-
-For example, if the server has a completely separate portal which can
-show the owner of a registered public key how many requests they have
-made. Then that will show no requests against my public key if I am being
-attacked; because all my requests are being intercepted and replaced by
-the attackers requests. From the server's point of view I am not using it
-at all, the attacker is.
+expiry suggests that something bad is happening. In extreme circumstances
+the server may block a client completely with a 'forbidden' response.
