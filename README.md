@@ -15,9 +15,12 @@ then minimising the work at the client end could save a lot of time.
 
 ## running the tests
 
+The code requires at least python 3.2 and pycrypto 2.6.1
 ```
 bin/test_psimbols.sh
 ```
+
+If the tests all pass you have the right dependencies.
 
 ## channel creation
 
@@ -59,10 +62,10 @@ that enables mitigation against man-in-the-middle attacks as explained below.
 If the server decides the public key is acceptable, then it decrypts the
 request and sees something like:
 ```json
-    {
-      "channel_types": ["AES", "DES"],
-      "request_salt": "something to make every request unique"
-    }
+{
+  "channel_types": ["AES", "DES"],
+  "request_salt": "something to make every request unique"
+}
 ```
 
 This tells the server which symmetric cipher algorithms are supported by
@@ -82,15 +85,15 @@ private key can decrypt the response string.
 When the client decrypts the "response" field it can see the channel
 configuration:
 ```json
-    {
-      "channel": "123",
-      "key": {
-        "type": "AES",
-        "data": "987"
-      },
-      "valid_until": "2018-09-09T00:00Z",
-      "signature": "123456789987654321"
-    }
+{
+  "channel": "123",
+  "key": {
+    "type": "AES",
+    "data": "987"
+  },
+  "valid_until": "2018-09-09T00:00Z",
+  "signature": "123456789987654321"
+}
 ```
 
 The "channel" field could be the same as the public key. Or it could be
@@ -108,8 +111,9 @@ Finally the server adds a "signature" field which is encrypted with its
 own *private* key. This enables the client to validate that the server is
 who it thinks it is and not a man-in-the-middle. But this can *only* be
 done if the client has the public key of the server. So this protection
-only applies to a "closed system"; but it is a strong protection and should
-be the default position.
+mostly applies to a "closed service" - when the client's public key is
+resistered with the server we also get the server's public key for the
+client configuration.
 
 ## making a request
 
