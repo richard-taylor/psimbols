@@ -11,7 +11,7 @@ working.
 This project is an exploration of whether you can put minimal configuration
 into the clients and let the servers provide dynamic communications channels
 on request. If there are a lot of clients, compared to the number of servers,
-then minimising the work at the client end could save a lot of work.
+then minimising the work at the client end could save a lot of time.
 
 ## running the tests
 
@@ -34,12 +34,18 @@ A client can send a message to a server to request a comms channel:
     "type": "RSA",
     "data": "123456789012345678901234567890"
   },
-  "request": "new channel"
+  "request": "aa11bb22cc33dd44ee55ff66gg77hh88ii"
 }
 ```
 
 There is nothing secret here. The public key is public. So we can send
 this message over an insecure channel like HTTP or on a message queue.
+
+An important point is that the client encrypts the "request" field
+with its *private* key. This can be decrypted by anyone with the public key,
+so it is not secret. But it can only have been created by the owner of the
+private key, so it proves that the client is legitimate and not someone who
+has only copied the public key.
 
 At this point the server has a choice. It can either create a channel
 whatever the public key is (an open service). Or it can reject requests
@@ -50,8 +56,18 @@ lots of ways to do that. I will probably hand install the keys from my
 test clients into my test servers and use only "closed services" because
 that enables mitigation against man-in-the-middle attacks as explained below.
 
-If the server decides the public key is acceptable, then it sends back
-a message:
+If the server decides the public key is acceptable, then it decrypts the
+request and sees something like:
+```json
+    {
+      "channel_types": ["AES", "DES"],
+      "request_salt": "something to make every request unique"
+    }
+```
+
+This tells the server which symmetric cipher algorithms are supported by
+the client. If there is a sufficiently strong algorithm that the server
+also supports, then it creates a comms channel and sends back a message:
 ```json
 {
   "source": "http://psimbols.example.com:9393/",
@@ -63,73 +79,18 @@ The "response" field is encrypted with the public key that was sent in
 the channel request message. Therefore only the client with the matching
 private key can decrypt the response string.
 
-When the client decrypts the response with its private key, it becomes
-a channel challenge message:
+When the client decrypts the "response" field it can see the channel
+configuration:
 ```json
-{
-  "account_secret": "what i told you when you registed",
-  "channel_types": ["AES", "DES"],
-  "challenge_question": "something to do"
-}
-```
-
-This challenge message has three purposes. Firstly it tells the client that
-this is the real server that it registered with, and not a man in the middle,
-if the "account_secret" matches what is configured. Secondly it tells the
-client which
-symmetric cipher algorithms are supported. And finally it provides a test
-that can only be passed by the legitimate owner of the public key. Since
-anyone can know the public key we don't want bad actors to be able to
-disrupt existing channels by creating new channels.
-
-There is then a limited time window in which the client can respond with a
-channel confirmation message:
-```json
-{
-  "public_key": {
-    "type": "RSA",
-    "data": "123456789012345678901234567890"
-  },
-  "request": "abcdefghijklmnopqrstuvwxyz"
-}
-```
-
-The important point here is that the client encrypts the request with its
-*private* key. This can be decrypted by anyone with the public key, so it is
-not secret. But it can only have been created by the owner of the private
-key, so it proves that the client is legitimate and not someone who has only
-copied the public key.
-
-When the server decrypts the message with the public key it sees the message:
-```json
-{
-  "channel_type": "AES",
-  "challenge_solution": "the answer"
-}
-```
-
-As long as the message decrypts properly and the challenge is answered
-correctly, the server will create a new comms channel and respond with
-a message:
-```json
-{
-  "source": "http://psimbols.example.com:9393/",
-  "response": "abcdefghijklmnopqrstuvwxyz"
-}
-
-```
-
-The "response" is encrypted with the client's public key, so it can be
-decrypted with the private key to see the final channel configuration:
-```json
-{
-  "channel": "123",
-  "key": {
-    "type": "AES",
-    "data": "987"
-  },
-  "valid_until": "2018-09-09T00:00Z"
-}
+    {
+      "channel": "123",
+      "key": {
+        "type": "AES",
+        "data": "987"
+      },
+      "valid_until": "2018-09-09T00:00Z",
+      "signature": "123456789987654321"
+    }
 ```
 
 The "channel" field could be the same as the public key. Or it could be
@@ -142,6 +103,13 @@ decryption is faster.
 
 The channel may also have a nominal expiry time. And other properties. All
 of this information is known only to the server and this particular client.
+
+Finally the server adds a "signature" field which is encrypted with its
+own *private* key. This enables the client to validate that the server is
+who it thinks it is and not a man-in-the-middle. But this can *only* be
+done if the client has the public key of the server. So this protection
+only applies to a "closed system"; but it is a strong protection and should
+be the default position.
 
 ## making a request
 
