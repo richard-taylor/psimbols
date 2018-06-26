@@ -64,6 +64,7 @@ The decrypted request will look something like:
     }
   }
 }
+```
 
 The "request_id" is useful if the client is making asynchronous requests
 and needs to tie the response to the right question.
