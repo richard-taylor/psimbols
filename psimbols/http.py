@@ -5,7 +5,7 @@ import json
 import psimbols.err
 import psimbols.message
 
-MIN_LENGTH = 12
+MIN_LENGTH = 32
 MAX_LENGTH = 1024
 
 message_processor = psimbols.message.Processor()
