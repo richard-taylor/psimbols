@@ -1,4 +1,5 @@
 
+import binascii
 import json
 
 import psimbols.crypt
@@ -41,10 +42,15 @@ class Processor:
         if 'request' not in message:
             raise psimbols.err.BadMessageFormat()
 
-        plaintext = crypt.decrypt_base64(message['request'], client)
+        try:
+            plaintext = crypt.decrypt_base64(message['request'], client)
+             
+        except binascii.Error:
+            raise psimbols.err.BadMessageFormat()
+            
         try:
             return json.loads(plaintext)
-            
+               
         except json.JSONDecodeError:
             raise psimbols.err.ClientUnauthorised()
             
