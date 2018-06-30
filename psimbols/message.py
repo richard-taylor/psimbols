@@ -45,7 +45,7 @@ class Processor:
         try:
             plaintext = crypt.decrypt_base64(message['request'], client)
              
-        except binascii.Error:
+        except (binascii.Error, ValueError):
             raise psimbols.err.BadMessageFormat()
             
         try:
