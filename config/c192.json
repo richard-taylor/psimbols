@@ -1,0 +1,9 @@
+{
+  "client": "c192",
+  "server": "http://localhost:9393/",
+  "key": {
+    "type": "AES",
+    "mode": "CBC",
+    "data": "123456789012345678901234"
+  }
+}
