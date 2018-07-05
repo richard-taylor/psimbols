@@ -31,6 +31,23 @@ def read_config(filename):
 
     return config if errors == 0 else {}
 
+def check_broken(server, expected_code, client, request):
+    data = {}
+    if len(client) > 0:
+        data['client'] = client
+    if len(request) > 0:
+        data['request'] = request
+
+    posted = json.dumps(data)
+    response = requests.post(server, data=posted)
+
+    expected = str(expected_code) + ' as expected for bad request ' + posted
+
+    if response.status_code == expected_code:
+        logging.info(expected)
+    else:
+        logging.error(str(response.status_code) + ' not ' + expected)
+
 # parse the command-line
 parser = argparse.ArgumentParser(description='client_x')
     
@@ -67,7 +84,16 @@ else:
     logging.error(server_text + ' responded ' + str(response.status_code))
     sys.exit(1)
 
-sys.exit(0)
-response = requests.post('http://localhost:9393',
-  data='{"client":"000","request":"12345678901234567890123456789012"}')
-print(response)
+## try sending broken requests
+
+# too short
+check_broken(config['server'], 400, client='', request='')
+
+# unknown client
+check_broken(config['server'], 401,
+             client='12345678901234567890123456789012', request='')
+
+# garbage request
+check_broken(config['server'], 401, 
+             client=config['client'], request='something rubbish')
+
