@@ -5,5 +5,6 @@
     "type": "AES",
     "mode": "CBC",
     "data": "12345678901234567890123456789012"
-  }
+  },
+  "comment": "A client with a 256-bit AES key."
 }

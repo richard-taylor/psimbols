@@ -16,20 +16,20 @@ import requests
 import sys
 
 def read_config(filename):
+    errors = 0
     try:
         with open(filename, 'r') as f:
             config = json.load(f)
-            if 'client' not in config:
-                logging.error("Config file has no 'client' property")
-            elif 'key' not in config:
-                logging.error("Config file has no 'key' property")
-            else:
-                return config
+            for property in ('client', 'server', 'key'):
+                if property not in config:
+                    logging.error("Config has no '" + property + "' property")
+                    errors += 1
     except IOError:
         logging.error('Could not read file')
     except json.JSONDecodeError:
         logging.error('Could not parse file as JSON')
-    return {}
+
+    return config if errors == 0 else {}
 
 # parse the command-line
 parser = argparse.ArgumentParser(description='client_x')
@@ -51,7 +51,22 @@ if len(config) == 0:
     sys.exit(1)
 
 logging.info('Using client ' + config['client'])
-logging.info('With key ' + str(config['key']))
+
+# use a plain GET request as a health check on the server
+server_text = 'Server ' + config['server']
+try:
+    response = requests.get(config['server'])
+
+except requests.exceptions.RequestException:
+    logging.error(server_text + ' failed to respond')
+    sys.exit(1)
+
+if response.ok:
+    logging.info(server_text + ' responded OK')
+else:
+    logging.error(server_text + ' responded ' + str(response.status_code))
+    sys.exit(1)
+
 sys.exit(0)
 response = requests.post('http://localhost:9393',
   data='{"client":"000","request":"12345678901234567890123456789012"}')
