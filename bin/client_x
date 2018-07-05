@@ -16,20 +16,21 @@ import requests
 import sys
 
 def read_config(filename):
-    errors = 0
     try:
         with open(filename, 'r') as f:
             config = json.load(f)
+            errors = 0
             for property in ('client', 'server', 'key'):
                 if property not in config:
                     logging.error("Config has no '" + property + "' property")
                     errors += 1
+
+        return config if errors == 0 else None
+
     except IOError:
         logging.error('Could not read file')
     except json.JSONDecodeError:
         logging.error('Could not parse file as JSON')
-
-    return config if errors == 0 else {}
 
 def check_broken(server, expected_code, client, request):
     data = {}
@@ -64,7 +65,7 @@ logging.basicConfig(
 
 logging.info('Reading client config from ' + args.config)
 config = read_config(args.config)
-if len(config) == 0:
+if config is None:
     sys.exit(1)
 
 logging.info('Using client ' + config['client'])
