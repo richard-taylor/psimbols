@@ -1,14 +1,44 @@
 
-import psimbols.client
-import psimbols.err
+import json
+import logging
+import os
 
-ID = '123'
-KEY = b'ABCDEFGHIJKLMNOPQRSTUVWX'
+import psimbols.client
+import psimbols.config
+import psimbols.err
 
 class Register:
 
-    def get_client(self, id):
+    def __init__(self):
+        self.read_clients(psimbols.config.dir)
 
-        if id == '123':
-            return psimbols.client.Client(ID, 'localhost:9393', KEY)
-        return None
+    def read_clients(self, dir):
+        self.clients = {}
+        for file in os.listdir(dir):
+            filename = os.path.join(dir, file)
+            try:
+                with open(filename, 'r') as f:
+                    config = json.load(f)
+                    errors = 0
+                    for property in ('client', 'server', 'key'):
+                        if property not in config:
+                            logging.error("No '" + property + "' in " + filename)
+                            errors += 1
+                            
+                    if errors == 0:
+                        self.clients[config['client']] = \
+                            psimbols.client.Client(config['client'],
+                                                   config['server'],
+                                                   config['key'])
+                        logging.info('Added client ' + config['client'])
+                        
+            except IOError:
+                logging.error('Could not read file ' + filename)
+            except json.JSONDecodeError:
+                logging.error('Could not parse JSON file ' + filename)
+                
+    def get_client(self, id):
+        try:
+            return self.clients[id]
+        except KeyError:
+            return None

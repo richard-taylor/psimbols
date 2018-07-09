@@ -3,10 +3,14 @@ import argparse
 import http.server
 import logging
 
-import psimbols.http
+import psimbols.config
 
 # parse the command-line
 parser = argparse.ArgumentParser(description='psimbols')
+    
+parser.add_argument('-c', '--config', 
+    help='directory to read configurations from (default %(default)s)',
+    default='config')
     
 parser.add_argument('-p', '--port', 
     help='port number to listen on (default %(default)s)',
@@ -21,6 +25,10 @@ logging.basicConfig(
 
 # apply command-line parameters to a HTTP server
 try:
+    psimbols.config.dir = args.config
+
+    import psimbols.http
+
     logging.info('Starting a server on port ' + str(args.port))
     server = http.server.HTTPServer(('', args.port), psimbols.http.Handler)
 
