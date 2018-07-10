@@ -1,20 +1,16 @@
 
 import psimbols.err
 import psimbols.message
+import psimbols.test.dummy
 import unittest
-
-class DummyCrypt:
-    def encrypt_base64(self, text, client):
-        return text
-    def decrypt_base64(self, text, client):
-        return text
-
-psimbols.message.crypt = DummyCrypt()
-      
+   
 class TestMessage(unittest.TestCase):
 
     def setUp(self):
-        self.processor = psimbols.message.Processor()
+        self.processor = psimbols.message.Processor(
+            crypt = psimbols.test.dummy.DummyCrypt(),
+            register = psimbols.test.dummy.DummyRegister()
+        )
     
     def test_no_client(self):
         im = {'request': '1234567890'}
@@ -45,7 +41,7 @@ class TestMessage(unittest.TestCase):
         im = {'client': '123', 'request': '{"run": "one"}'}
         om = self.processor.process(im)
         self.assertEqual('123', om['client'])
-        self.assertEqual('localhost:9393', om['server'])
+        self.assertEqual('localhost', om['server'])
         self.assertEqual('{"return": 1}', om['response'])
                                  
 if __name__ == '__main__':

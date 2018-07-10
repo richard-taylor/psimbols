@@ -10,7 +10,8 @@ import psimbols.err
 class Register:
 
     def __init__(self):
-        self.read_clients(psimbols.config.dir)
+        if psimbols.config.dir is not None:
+            self.read_clients(psimbols.config.dir)
 
     def read_clients(self, dir):
         self.clients = {}

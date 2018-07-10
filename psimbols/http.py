@@ -8,13 +8,13 @@ import psimbols.message
 MIN_LENGTH = 32
 MAX_LENGTH = 1024
 
-message_processor = psimbols.message.Processor()
+processor = psimbols.message.Processor()
 
 class Handler(http.server.BaseHTTPRequestHandler):
 
     server_version = 'Psimbols/1.0'
     sys_version = ''
-    
+            
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-Type', 'text/plain')  
@@ -48,7 +48,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
 
         try:
-            response = message_processor.process(message)
+            response = processor.process(message)
                  
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')  

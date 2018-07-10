@@ -7,4 +7,4 @@ export PYTHONPATH=$TOP
 # run the python unit tests
 
 cd $TOP/psimbols/test
-python3 -m unittest
+python3 -m unittest -v
